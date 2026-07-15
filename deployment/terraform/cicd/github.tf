@@ -42,113 +42,61 @@ resource "github_repository" "repo" {
 }
 
 
-resource "github_actions_variable" "gcp_project_number" {
-  repository    = var.repository_name
-  variable_name = "GCP_PROJECT_NUMBER"
-  value         = data.google_project.cicd_project.number
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
+
+# Reference existing GitHub PAT secret created by gcloud CLI
+data "google_secret_manager_secret" "github_pat" {
+  project   = var.cicd_runner_project_id
+  secret_id = var.github_pat_secret_id
 }
 
-resource "github_actions_secret" "wif_pool_id" {
-  repository      = var.repository_name
-  secret_name     = "WIF_POOL_ID"
-  plaintext_value = google_iam_workload_identity_pool.github_pool.workload_identity_pool_id
-  depends_on      = [github_repository.repo, data.github_repository.existing_repo]
+# Get CICD project data for Cloud Build service account
+data "google_project" "cicd_project" {
+  project_id = var.cicd_runner_project_id
 }
 
-resource "github_actions_secret" "wif_provider_id" {
-  repository      = var.repository_name
-  secret_name     = "WIF_PROVIDER_ID"
-  plaintext_value = google_iam_workload_identity_pool_provider.github_provider.workload_identity_pool_provider_id
-  depends_on      = [github_repository.repo, data.github_repository.existing_repo]
+# Grant Cloud Build service account access to GitHub PAT secret
+resource "google_secret_manager_secret_iam_member" "cloudbuild_secret_accessor" {
+  project   = var.cicd_runner_project_id
+  secret_id = data.google_secret_manager_secret.github_pat.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:service-${data.google_project.cicd_project.number}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
+  depends_on = [resource.google_project_service.cicd_services]
 }
 
-resource "github_actions_secret" "gcp_service_account" {
-  repository      = var.repository_name
-  secret_name     = "GCP_SERVICE_ACCOUNT"
-  plaintext_value = google_service_account.cicd_runner_sa.email
-  depends_on      = [github_repository.repo, data.github_repository.existing_repo]
-}
+# Create the GitHub connection (fallback for manual Terraform usage)
+resource "google_cloudbuildv2_connection" "github_connection" {
+  count      = var.create_cb_connection ? 0 : 1
+  project    = var.cicd_runner_project_id
+  location   = var.region
+  name       = var.host_connection_name
 
-resource "github_actions_variable" "staging_project_id" {
-  repository    = var.repository_name
-  variable_name = "STAGING_PROJECT_ID"
-  value         = var.staging_project_id
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "prod_project_id" {
-  repository    = var.repository_name
-  variable_name = "PROD_PROJECT_ID"
-  value         = var.prod_project_id
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "region" {
-  repository    = var.repository_name
-  variable_name = "REGION"
-  value         = var.region
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "cicd_project_id" {
-  repository    = var.repository_name
-  variable_name = "CICD_PROJECT_ID"
-  value         = var.cicd_runner_project_id
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "app_sa_email_staging" {
-  repository    = var.repository_name
-  variable_name = "APP_SA_EMAIL_STAGING"
-  value         = google_service_account.app_sa["staging"].email
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "app_sa_email_prod" {
-  repository    = var.repository_name
-  variable_name = "APP_SA_EMAIL_PROD"
-  value         = google_service_account.app_sa["prod"].email
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "app_service_account_staging" {
-  repository    = var.repository_name
-  variable_name = "APP_SERVICE_ACCOUNT_STAGING"
-  value         = google_service_account.app_sa["staging"].email
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "app_service_account_prod" {
-  repository    = var.repository_name
-  variable_name = "APP_SERVICE_ACCOUNT_PROD"
-  value         = google_service_account.app_sa["prod"].email
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "logs_bucket_name_staging" {
-  repository    = var.repository_name
-  variable_name = "LOGS_BUCKET_NAME_STAGING"
-  value         = google_storage_bucket.logs_data_bucket[var.staging_project_id].name
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-resource "github_actions_variable" "logs_bucket_name_prod" {
-  repository    = var.repository_name
-  variable_name = "LOGS_BUCKET_NAME_PROD"
-  value         = google_storage_bucket.logs_data_bucket[var.prod_project_id].name
-  depends_on    = [github_repository.repo, data.github_repository.existing_repo]
-}
-
-
-
-resource "github_repository_environment" "production_environment" {
-  repository  = var.repository_name
-  environment = "production"
-  depends_on  = [github_repository.repo, data.github_repository.existing_repo]
-
-  deployment_branch_policy {
-    protected_branches     = false
-    custom_branch_policies = true
+  github_config {
+    app_installation_id = var.github_app_installation_id
+    authorizer_credential {
+      oauth_token_secret_version = "${data.google_secret_manager_secret.github_pat.id}/versions/latest"
+    }
   }
+  depends_on = [
+    resource.google_project_service.cicd_services,
+    resource.google_project_service.deploy_project_services,
+    resource.google_secret_manager_secret_iam_member.cloudbuild_secret_accessor
+  ]
+}
+
+
+resource "google_cloudbuildv2_repository" "repo" {
+  project  = var.cicd_runner_project_id
+  location = var.region
+  name     = var.repository_name
+  
+  # Use existing connection ID when it exists, otherwise use the created connection
+  parent_connection = var.create_cb_connection ? "projects/${var.cicd_runner_project_id}/locations/${var.region}/connections/${var.host_connection_name}" : google_cloudbuildv2_connection.github_connection[0].id
+  remote_uri       = "https://github.com/${var.repository_owner}/${var.repository_name}.git"
+  depends_on = [
+    resource.google_project_service.cicd_services,
+    resource.google_project_service.deploy_project_services,
+    data.github_repository.existing_repo,
+    github_repository.repo,
+    google_cloudbuildv2_connection.github_connection,
+  ]
 }

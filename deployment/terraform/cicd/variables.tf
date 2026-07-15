@@ -92,7 +92,24 @@ variable "repository_owner" {
 }
 
 
+variable "github_app_installation_id" {
+  description = "GitHub App Installation ID for Cloud Build"
+  type        = string
+  default     = null
+}
 
+
+variable "github_pat_secret_id" {
+  description = "GitHub PAT Secret ID created by gcloud CLI"
+  type        = string
+  default     = null
+}
+
+variable "create_cb_connection" {
+  description = "Flag indicating if a Cloud Build connection already exists"
+  type        = bool
+  default     = false
+}
 
 variable "create_repository" {
   description = "Flag indicating whether to create a new Git repository"
