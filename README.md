@@ -33,7 +33,7 @@ graph TD
         FA -->|Invokes| FT[format_itinerary tool]
     end
     
-    AR -->|Managed Identity (Root: Pro, Specialists: Flash)| GE[Vertex Gemini Endpoint]
+    AR -->|"Managed Identity (Root: Pro, Specialists: Flash)"| GE[Vertex Gemini Endpoint]
     GE -->|Final Response| A2UI
 ```
 
