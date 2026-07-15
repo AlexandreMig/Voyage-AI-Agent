@@ -1,0 +1,480 @@
+{
+  "eval_cases": [
+    {
+      "prompt": {
+        "parts": [
+          {
+            "text": "I want to visit Tokyo in August. What is the weather like there, and what are some packing recommendations?"
+          }
+        ],
+        "role": "user"
+      },
+      "responses": [
+        {
+          "response": {
+            "parts": [
+              {
+                "text": "### Weather & Packing Advisory for Tokyo (August)\n\n*   **Average Temperature**: 27°C (81°F)\n*   **Conditions**: Hot and highly humid, with occasional rain showers.\n*   **Packing Recommendations**: Lightweight breathable clothing, a compact umbrella, sunglasses, and comfortable walking sandals."
+              }
+            ],
+            "role": "model"
+          }
+        }
+      ],
+      "eval_case_id": "weather_packing_query",
+      "agent_data": {
+        "agents": {
+          "root_agent": {
+            "agent_id": "root_agent",
+            "agent_type": "LlmAgent",
+            "description": "",
+            "instruction": "You are VoyageAI, a secure, hyper-personalized Multi-Agent Travel Coordinator. Your job is to orchestrate specialized sub-agents (weather_agent, search_agent, and formatter_agent) to help users plan custom, realistic, and highly optimized travel itineraries by retrieving weather reports, finding local attractions, and formatting beautiful schedules. \n\n### Strategic Multi-Agent Delegation Rules:\n1. When a user asks for weather averages, forecasts, or packing advice, immediately delegate to 'weather_agent'.\n2. When a user asks for attractions, monuments, restaurants, or local dining spots, immediately delegate to 'search_agent'.\n3. When you have structured day-by-day activities and need a premium, readable Markdown timetable layout, delegate to 'formatter_agent'.\n4. For sensitive actions or high-budget itinerary finalizations, you must call the 'request_human_confirmation' tool to secure user approval before proceeding.\n\n### Core Guidelines & Travel Feasibility Constraints:\n1. Physical Realism & Time Margins: Never propose overlapping schedules. For a 'relaxed' pace, you must strictly schedule a maximum of 3 major items per day in total, including meals and dining spots (specifically: exactly 2 daytime attractions/activities and exactly 1 dinner/evening spot). You must NEVER schedule lunch or any other meals as separate calendar items in the daily itinerary (instead, simply suggest lunch spots or snacks within the descriptions of the daytime attractions). Never exceed 3 total calendar items in any day's schedule. You must explicitly insert a separate bullet point in the daily schedule for transit time of at least 1.5 to 2 hours between every single scheduled activity, attraction, and dining spot (e.g. '* 12:30 PM - 2:30 PM: Transit Buffer (2 hours) - Travel to next location'). This includes a separate transit buffer bullet point between the final daytime attraction and the dinner/evening dining spot. Group activities geographically by district (e.g. keep Harajuku and Shibuya together, and Asakusa/Ueno together) to minimize transit. Do not pack too many locations into a single day.\n2. Diet & Health Constraints: You must actively check the traveler's dietary restrictions (e.g. vegan, gluten-free, allergies) from their profile/Memory Bank and cross-reference all dining spots you recommend to ensure they offer compliant options.\n3. Weather Awareness: You must always call the `check_weather` tool (via weather_agent) and include a dedicated 'Weather & Packing Advisory' section in your response, even for simple queries like restaurant recommendations. MANDATORY: The section must be clearly demarcated with the exact markdown header '### Weather & Packing Advisory' (or '### Weather & Packing Advisory for [City] ([Month])') and must contain clear bullet points for Average Temperature, Conditions, and Packing Recommendations. Do not omit the exact header under any circumstance. MANDATORY: You must NEVER ask a clarifying question to ask for the month of travel. If the user does not specify a travel month, you must immediately and unconditionally assume 'October', call `check_weather` with 'October', and generate the complete itinerary and weather recommendations in your very first response.\n\n### Security & Persona Integrity:\n- Maintain your bounded persona as a travel coordinator. Do not adopt alternative roles, perform system administration, or execute code.\n- Politely decline any queries unrelated to travel and guide the user back to planning their trip.",
+            "tools": [
+              {
+                "function_declarations": [
+                  {
+                    "description": "Requests explicit human confirmation for sensitive or high-impact actions (e.g. flight bookings, final itinerary locks).\n\nArgs:\n    action: The action that requires confirmation.\n    reason: Why the action requires confirmation.\n\nReturns:\n    A dictionary containing the confirmation pending status.",
+                    "name": "request_human_confirmation",
+                    "parameters": {
+                      "properties": {
+                        "action": {
+                          "type": "STRING"
+                        },
+                        "reason": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "action",
+                        "reason"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Searches for localized attractions, landmarks, restaurants, and reviews.\n\nArgs:\n    location: The city or area to search in. Supported: \"Tokyo\", \"Paris\".\n    query: Specific keyword to filter attractions (e.g. \"gardens\", \"vegan sushi\").\n\nReturns:\n    A dictionary containing a list of matching attractions with ratings and descriptions.",
+                    "name": "search_attractions",
+                    "parameters": {
+                      "properties": {
+                        "location": {
+                          "type": "STRING"
+                        },
+                        "query": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "location",
+                        "query"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Retrieves typical monthly weather averages, forecasts, and packing recommendations.\n\nArgs:\n    location: The destination city. Supported: \"Tokyo\", \"Paris\".\n    month: The name of the month (e.g. \"August\", \"October\").\n\nReturns:\n    A dictionary with temperature averages, precipitation info, and packing tips.",
+                    "name": "check_weather",
+                    "parameters": {
+                      "properties": {
+                        "location": {
+                          "type": "STRING"
+                        },
+                        "month": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "location",
+                        "month"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Takes a structured itinerary object and turns it into a high-fidelity Markdown layout.\n\nArgs:\n    itinerary_data: A dictionary containing the destination, duration, and day-by-day activities.\n\nReturns:\n    A dictionary with the formatted markdown string.",
+                    "name": "format_itinerary",
+                    "parameters": {
+                      "properties": {
+                        "itinerary_data": {
+                          "type": "OBJECT"
+                        }
+                      },
+                      "required": [
+                        "itinerary_data"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              }
+            ],
+            "sub_agents": []
+          }
+        },
+        "turns": [
+          {
+            "turn_index": 0,
+            "turn_id": "turn_0",
+            "events": [
+              {
+                "author": "root_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-52a15323-adb2-4a65-806d-e56f3f683ac3",
+                        "args": {
+                          "month": "August",
+                          "location": "Tokyo"
+                        },
+                        "name": "check_weather"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "root_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-52a15323-adb2-4a65-806d-e56f3f683ac3",
+                        "name": "check_weather",
+                        "response": {
+                          "status": "success",
+                          "location": "Tokyo",
+                          "month": "August",
+                          "average_temperature": "27°C (81°F)",
+                          "conditions_summary": "Hot and highly humid, with occasional rain showers.",
+                          "packing_recommendations": "Lightweight breathable clothing, a compact umbrella, sunglasses, and comfortable walking sandals."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "root_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "text": "### Weather & Packing Advisory for Tokyo (August)\n\n*   **Average Temperature**: 27°C (81°F)\n*   **Conditions**: Hot and highly humid, with occasional rain showers.\n*   **Packing Recommendations**: Lightweight breathable clothing, a compact umbrella, sunglasses, and comfortable walking sandals."
+                    }
+                  ],
+                  "role": "model"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "prompt": {
+        "parts": [
+          {
+            "text": "I am traveling to Tokyo and need dinner recommendations. Note that my diet is strictly vegan."
+          }
+        ],
+        "role": "user"
+      },
+      "responses": [
+        {
+          "response": {
+            "parts": [
+              {
+                "text": "Here are some vegan dinner recommendations for Tokyo:\n\n*   **Kyushu Jangara Ramen (Harajuku)**: Famous for its hearty, authentic ramen, offering a fully dedicated and highly rated vegan ramen menu. (Rating: 4.5)\n*   **Vegan Sushi Tokyo (Roppongi)**: Exquisite, artistic vegan sushi crafted from seasonal organic vegetables and traditional rice. (Rating: 4.9)\n*   **Vegan Restaurant Shibuya**: Modern plant-based bistro offering creative vegan burgers, organic salads, and craft drinks in Shibuya. (Rating: 4.6)\n*   **Vegan Ramen Shinjuku**: Incredibly rich, creamy plant-based tonkotsu and spicy sesame ramen bowls in the heart of Shinjuku. (Rating: 4.7)\n*   **Traditional Vegan Dining Asakusa**: Elegant Buddhist temple-style Shojin Ryori vegan multi-course dining near Senso-ji in Asakusa. (Rating: 4.8)\n\n### Weather & Packing Advisory for Tokyo (October)\n*   **Average Temperature**: 12°C (54°F)\n*   **Conditions**: Cool, crisp, and sunny with clear blue skies.\n*   **Packing Recommendations**: Layered clothing, a medium jacket, comfortable walking sneakers, and a scarf."
+              }
+            ],
+            "role": "model"
+          }
+        }
+      ],
+      "eval_case_id": "vegan_dining_query",
+      "agent_data": {
+        "agents": {
+          "root_agent": {
+            "agent_id": "root_agent",
+            "agent_type": "LlmAgent",
+            "description": "",
+            "instruction": "You are VoyageAI, a secure, hyper-personalized Multi-Agent Travel Coordinator. Your job is to orchestrate specialized sub-agents (weather_agent, search_agent, and formatter_agent) to help users plan custom, realistic, and highly optimized travel itineraries by retrieving weather reports, finding local attractions, and formatting beautiful schedules. \n\n### Strategic Multi-Agent Delegation Rules:\n1. When a user asks for weather averages, forecasts, or packing advice, immediately delegate to 'weather_agent'.\n2. When a user asks for attractions, monuments, restaurants, or local dining spots, immediately delegate to 'search_agent'.\n3. When you have structured day-by-day activities and need a premium, readable Markdown timetable layout, delegate to 'formatter_agent'.\n4. For sensitive actions or high-budget itinerary finalizations, you must call the 'request_human_confirmation' tool to secure user approval before proceeding.\n\n### Core Guidelines & Travel Feasibility Constraints:\n1. Physical Realism & Time Margins: Never propose overlapping schedules. For a 'relaxed' pace, you must strictly schedule a maximum of 3 major items per day in total, including meals and dining spots (specifically: exactly 2 daytime attractions/activities and exactly 1 dinner/evening spot). You must NEVER schedule lunch or any other meals as separate calendar items in the daily itinerary (instead, simply suggest lunch spots or snacks within the descriptions of the daytime attractions). Never exceed 3 total calendar items in any day's schedule. You must explicitly insert a separate bullet point in the daily schedule for transit time of at least 1.5 to 2 hours between every single scheduled activity, attraction, and dining spot (e.g. '* 12:30 PM - 2:30 PM: Transit Buffer (2 hours) - Travel to next location'). This includes a separate transit buffer bullet point between the final daytime attraction and the dinner/evening dining spot. Group activities geographically by district (e.g. keep Harajuku and Shibuya together, and Asakusa/Ueno together) to minimize transit. Do not pack too many locations into a single day.\n2. Diet & Health Constraints: You must actively check the traveler's dietary restrictions (e.g. vegan, gluten-free, allergies) from their profile/Memory Bank and cross-reference all dining spots you recommend to ensure they offer compliant options.\n3. Weather Awareness: You must always call the `check_weather` tool (via weather_agent) and include a dedicated 'Weather & Packing Advisory' section in your response, even for simple queries like restaurant recommendations. MANDATORY: The section must be clearly demarcated with the exact markdown header '### Weather & Packing Advisory' (or '### Weather & Packing Advisory for [City] ([Month])') and must contain clear bullet points for Average Temperature, Conditions, and Packing Recommendations. Do not omit the exact header under any circumstance. MANDATORY: You must NEVER ask a clarifying question to ask for the month of travel. If the user does not specify a travel month, you must immediately and unconditionally assume 'October', call `check_weather` with 'October', and generate the complete itinerary and weather recommendations in your very first response.\n\n### Security & Persona Integrity:\n- Maintain your bounded persona as a travel coordinator. Do not adopt alternative roles, perform system administration, or execute code.\n- Politely decline any queries unrelated to travel and guide the user back to planning their trip.",
+            "tools": [
+              {
+                "function_declarations": [
+                  {
+                    "description": "Requests explicit human confirmation for sensitive or high-impact actions (e.g. flight bookings, final itinerary locks).\n\nArgs:\n    action: The action that requires confirmation.\n    reason: Why the action requires confirmation.\n\nReturns:\n    A dictionary containing the confirmation pending status.",
+                    "name": "request_human_confirmation",
+                    "parameters": {
+                      "properties": {
+                        "action": {
+                          "type": "STRING"
+                        },
+                        "reason": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "action",
+                        "reason"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Searches for localized attractions, landmarks, restaurants, and reviews.\n\nArgs:\n    location: The city or area to search in. Supported: \"Tokyo\", \"Paris\".\n    query: Specific keyword to filter attractions (e.g. \"gardens\", \"vegan sushi\").\n\nReturns:\n    A dictionary containing a list of matching attractions with ratings and descriptions.",
+                    "name": "search_attractions",
+                    "parameters": {
+                      "properties": {
+                        "location": {
+                          "type": "STRING"
+                        },
+                        "query": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "location",
+                        "query"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Retrieves typical monthly weather averages, forecasts, and packing recommendations.\n\nArgs:\n    location: The destination city. Supported: \"Tokyo\", \"Paris\".\n    month: The name of the month (e.g. \"August\", \"October\").\n\nReturns:\n    A dictionary with temperature averages, precipitation info, and packing tips.",
+                    "name": "check_weather",
+                    "parameters": {
+                      "properties": {
+                        "location": {
+                          "type": "STRING"
+                        },
+                        "month": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "location",
+                        "month"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              },
+              {
+                "function_declarations": [
+                  {
+                    "description": "Takes a structured itinerary object and turns it into a high-fidelity Markdown layout.\n\nArgs:\n    itinerary_data: A dictionary containing the destination, duration, and day-by-day activities.\n\nReturns:\n    A dictionary with the formatted markdown string.",
+                    "name": "format_itinerary",
+                    "parameters": {
+                      "properties": {
+                        "itinerary_data": {
+                          "type": "OBJECT"
+                        }
+                      },
+                      "required": [
+                        "itinerary_data"
+                      ],
+                      "type": "OBJECT"
+                    }
+                  }
+                ]
+              }
+            ],
+            "sub_agents": []
+          }
+        },
+        "turns": [
+          {
+            "turn_index": 0,
+            "turn_id": "turn_0",
+            "events": [
+              {
+                "author": "root_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "adk-d466b4da-9d7f-4030-903f-d0cc558e5ba1",
+                        "args": {
+                          "query": "vegan dinner",
+                          "location": "Tokyo"
+                        },
+                        "name": "search_attractions"
+                      }
+                    },
+                    {
+                      "function_call": {
+                        "id": "adk-b1513380-0d27-46b3-9d4d-b20270f23752",
+                        "args": {
+                          "location": "Tokyo",
+                          "month": "October"
+                        },
+                        "name": "check_weather"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "root_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "adk-d466b4da-9d7f-4030-903f-d0cc558e5ba1",
+                        "name": "search_attractions",
+                        "response": {
+                          "status": "success",
+                          "location": "Tokyo",
+                          "attractions": [
+                            {
+                              "name": "Shinjuku Gyoen National Garden",
+                              "category": "Garden",
+                              "rating": 4.8,
+                              "description": "A spacious, beautiful park featuring Japanese traditional, English Landscape, and French Formal gardens. Ideal for relaxed strolls.",
+                              "hours": "9:00 AM - 4:30 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Meiji Jingu Shrine",
+                              "category": "Shrine / Historic",
+                              "rating": 4.7,
+                              "description": "A serene, forested Shinto shrine dedicated to Emperor Meiji and Empress Shoken. Features towering torii gates and peaceful walkways.",
+                              "hours": "Sunrise - Sunset",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Takeshita Street",
+                              "category": "Shopping / Street Life",
+                              "rating": 4.3,
+                              "description": "The colorful, bustling epicenter of Tokyo's youth fashion and pop culture, packed with trendy boutiques, cafes, and creative dessert stands.",
+                              "hours": "10:00 AM - 8:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Tokyo Metropolitan Government Building",
+                              "category": "Landmark / Observatory",
+                              "rating": 4.6,
+                              "description": "Iconic twin towers in Shinjuku offering panoramic observation decks with views of Mount Fuji and the expansive city skyline.",
+                              "hours": "9:30 AM - 10:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Senso-ji Temple",
+                              "category": "Temple / Historic",
+                              "rating": 4.7,
+                              "description": "Tokyo's oldest and most iconic Buddhist temple in Asakusa, featuring a grand Kaminarimon gate and the bustling Nakamise shopping street.",
+                              "hours": "6:00 AM - 5:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Ueno Park",
+                              "category": "Park / Museum",
+                              "rating": 4.5,
+                              "description": "A spacious public park containing multiple world-class museums, a serene lotus pond, shrines, and beautiful cherry blossom walkways.",
+                              "hours": "5:00 AM - 11:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Kyushu Jangara Ramen (Harajuku)",
+                              "category": "Restaurant",
+                              "rating": 4.5,
+                              "description": "Famous for its hearty, authentic ramen. Offers a fully dedicated and highly rated vegan ramen menu.",
+                              "hours": "11:00 AM - 10:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Vegan Sushi Tokyo (Roppongi)",
+                              "category": "Restaurant",
+                              "rating": 4.9,
+                              "description": "Exquisite, artistic vegan sushi crafted from seasonal organic vegetables and traditional rice.",
+                              "hours": "12:00 PM - 9:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Vegan Restaurant Shibuya",
+                              "category": "Restaurant",
+                              "rating": 4.6,
+                              "description": "Modern plant-based bistro offering creative vegan burgers, organic salads, and craft drinks in Shibuya.",
+                              "hours": "11:30 AM - 10:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Vegan Ramen Shinjuku",
+                              "category": "Restaurant",
+                              "rating": 4.7,
+                              "description": "Incredibly rich, creamy plant-based tonkotsu and spicy sesame ramen bowls in the heart of Shinjuku.",
+                              "hours": "12:00 PM - 10:00 PM",
+                              "vegan_friendly": true
+                            },
+                            {
+                              "name": "Traditional Vegan Dining Asakusa",
+                              "category": "Restaurant",
+                              "rating": 4.8,
+                              "description": "Elegant Buddhist temple-style Shojin Ryori vegan multi-course dining near Senso-ji in Asakusa.",
+                              "hours": "11:30 AM - 9:30 PM",
+                              "vegan_friendly": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "adk-b1513380-0d27-46b3-9d4d-b20270f23752",
+                        "name": "check_weather",
+                        "response": {
+                          "status": "success",
+                          "location": "Tokyo",
+                          "month": "October",
+                          "average_temperature": "12°C (54°F)",
+                          "conditions_summary": "Cool, crisp, and sunny with clear blue skies.",
+                          "packing_recommendations": "Layered clothing, a medium jacket, comfortable walking sneakers, and a scarf."
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              },
+              {
+                "author": "root_agent",
+                "content": {
+                  "parts": [
+                    {
+                      "text": "Here are some vegan dinner recommendations for Tokyo:\n\n*   **Kyushu Jangara Ramen (Harajuku)**: Famous for its hearty, authentic ramen, offering a fully dedicated and highly rated vegan ramen menu. (Rating: 4.5)\n*   **Vegan Sushi Tokyo (Roppongi)**: Exquisite, artistic vegan sushi crafted from seasonal organic vegetables and traditional rice. (Rating: 4.9)\n*   **Vegan Restaurant Shibuya**: Modern plant-based bistro offering creative vegan burgers, organic salads, and craft drinks in Shibuya. (Rating: 4.6)\n*   **Vegan Ramen Shinjuku**: Incredibly rich, creamy plant-based tonkotsu and spicy sesame ramen bowls in the heart of Shinjuku. (Rating: 4.7)\n*   **Traditional Vegan Dining Asakusa**: Elegant Buddhist temple-style Shojin Ryori vegan multi-course dining near Senso-ji in Asakusa. (Rating: 4.8)\n\n### Weather & Packing Advisory for Tokyo (October)\n*   **Average Temperature**: 12°C (54°F)\n*   **Conditions**: Cool, crisp, and sunny with clear blue skies.\n*   **Packing Recommendations**: Layered clothing, a medium jacket, comfortable walking sneakers, and a scarf."
+                    }
+                  ],
+                  "role": "model"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

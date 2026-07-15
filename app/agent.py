@@ -17,11 +17,15 @@
 
 import os
 import re
+import logging
 import google.auth
 
 from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
+
+# Initialize structured logging
+logger = logging.getLogger("voyageai.agent")
 from google.genai import types
 
 # Initialize credentials and ensure correct project fallback
@@ -117,14 +121,14 @@ async def before_agent_callback(callback_context: CallbackContext) -> None:
             if isinstance(inp, str):
                 redacted = redact_pii(inp)
                 if redacted != inp:
-                    print(f"[INTENT] PII detected in user input message. Initiating active redaction pipeline.")
+                    logger.info(f"[INTENT] PII detected in user input message. Initiating active redaction pipeline.")
                     resume_inputs[i] = redacted
-                    print(f"[OUTCOME] Active PII Redaction Successful.")
+                    logger.info(f"[OUTCOME] Active PII Redaction Successful.")
 
 
 async def before_model_callback(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
     """Intercepts and neutralizes potential Model Armor floor blocking triggers immediately before calling Gemini API."""
-    print("[INTENT] Intercepting LLM request to run Model Armor pre-flight safety filter.")
+    logger.info("[INTENT] Intercepting LLM request to run Model Armor pre-flight safety filter.")
     if llm_request and llm_request.contents:
         for content in llm_request.contents:
             if hasattr(content, "parts") and content.parts:
@@ -149,19 +153,19 @@ async def before_model_callback(callback_context: CallbackContext, llm_request: 
                         
                         if text != orig_text:
                             part.text = text
-                            print(f"[OUTCOME] Pre-flight safety filter activated: neutralized Model Armor floor trigger.")
+                            logger.info(f"[OUTCOME] Pre-flight safety filter activated: neutralized Model Armor floor trigger.")
     return None
 
 
 async def after_agent_callback(callback_context: CallbackContext):
     """Logs intent vs. outcome state and triggers long-term Memory Bank profile compilation."""
-    print(f"[INTENT] Session completed. Processing Memory Bank compilation to store profile preferences.")
+    logger.info(f"[INTENT] Session completed. Processing Memory Bank compilation to store profile preferences.")
     try:
         await callback_context.add_session_to_memory()
-        print(f"[OUTCOME] Memory Bank update successful. User profile synchronized.")
+        logger.info(f"[OUTCOME] Memory Bank update successful. User profile synchronized.")
     except ValueError:
         # Handle cases where memory service is not available (e.g., during local eval generate)
-        print(f"[OUTCOME] Memory service skipped (normal during mock evaluation runs).")
+        logger.info(f"[OUTCOME] Memory service skipped (normal during mock evaluation runs).")
         pass
     return None
 
@@ -231,7 +235,7 @@ IS_EVAL_MODE = os.environ.get("GOOGLE_CLOUD_PROJECT") == "fde-ai-learning-projec
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-pro",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=TRAVEL_CONCIERGE_INSTRUCTION,

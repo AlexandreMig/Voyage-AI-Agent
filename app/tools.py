@@ -16,8 +16,13 @@
 """Specialized travel planning tools for VoyageAI with robust Pydantic validation."""
 
 import json
+import logging
 from typing import List, Optional
 from pydantic import BaseModel, Field, ValidationError
+
+# Initialize structured logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("voyageai.tools")
 
 # ==========================================
 # 📋 Pydantic Validation Schemas & Models
@@ -86,7 +91,7 @@ def search_attractions(location: str, query: str) -> dict:
         A dictionary containing a list of matching attractions with ratings and descriptions.
     """
     # 📝 Intent Logging
-    print(f"[INTENT] Tool 'search_attractions' triggered with location='{location}' and query='{query}'")
+    logger.info(f"[INTENT] Tool 'search_attractions' triggered with location='{location}' and query='{query}'")
 
     try:
         # Explicit Pydantic validation
@@ -94,7 +99,7 @@ def search_attractions(location: str, query: str) -> dict:
     except ValidationError as e:
         # Guided recovery for validation errors
         err_msg = f"Argument validation failed for search_attractions: {e.errors()}"
-        print(f"[OUTCOME] Tool failed. {err_msg}")
+        logger.error(f"[OUTCOME] Tool failed. {err_msg}")
         return {
             "status": "error",
             "message": "Argument validation failed.",
@@ -108,7 +113,7 @@ def search_attractions(location: str, query: str) -> dict:
     # Guided recovery for unsupported locations
     if "tokyo" not in loc_lower and "paris" not in loc_lower:
         rec_msg = f"The database only contains records for 'Tokyo' and 'Paris'. Please correct your 'location' argument to 'Tokyo' or 'Paris'."
-        print(f"[OUTCOME] Tool failed. Unsupported location '{location}'.")
+        logger.error(f"[OUTCOME] Tool failed. Unsupported location '{location}'.")
         return {
             "status": "error",
             "message": f"Destination '{location}' is not supported in the local database.",
@@ -250,10 +255,10 @@ def search_attractions(location: str, query: str) -> dict:
     try:
         validated_resp = SearchAttractionsResponse(location=inputs.location, attractions=final_list)
         out_dict = validated_resp.model_dump()
-        print(f"[OUTCOME] Successfully found {len(final_list)} attractions in '{inputs.location}' matching query='{inputs.query}'")
+        logger.info(f"[OUTCOME] Successfully found {len(final_list)} attractions in '{inputs.location}' matching query='{inputs.query}'")
         return out_dict
     except ValidationError as e:
-        print(f"[OUTCOME] Error: Output serialization failed: {e.errors()}")
+        logger.error(f"[OUTCOME] Error: Output serialization failed: {e.errors()}")
         return {"status": "error", "message": "Output schema validation failed."}
 
 
@@ -268,14 +273,14 @@ def check_weather(location: str, month: str) -> dict:
         A dictionary with temperature averages, precipitation info, and packing tips.
     """
     # 📝 Intent Logging
-    print(f"[INTENT] Tool 'check_weather' triggered with location='{location}' and month='{month}'")
+    logger.info(f"[INTENT] Tool 'check_weather' triggered with location='{location}' and month='{month}'")
 
     try:
         # Explicit Pydantic validation
         inputs = CheckWeatherInput(location=location, month=month)
     except ValidationError as e:
         err_msg = f"Argument validation failed for check_weather: {e.errors()}"
-        print(f"[OUTCOME] Tool failed. {err_msg}")
+        logger.error(f"[OUTCOME] Tool failed. {err_msg}")
         return {
             "status": "error",
             "message": "Argument validation failed.",
@@ -289,7 +294,7 @@ def check_weather(location: str, month: str) -> dict:
     # Guided recovery for unsupported locations
     if "tokyo" not in loc_lower and "paris" not in loc_lower:
         rec_msg = f"The database only contains seasonal weather reports for 'Tokyo' and 'Paris'. Please correct your 'location' argument to 'Tokyo' or 'Paris'."
-        print(f"[OUTCOME] Tool failed. Unsupported location '{location}'.")
+        logger.error(f"[OUTCOME] Tool failed. Unsupported location '{location}'.")
         return {
             "status": "error",
             "message": f"Weather data for '{location}' is not supported in the local database.",
@@ -325,10 +330,10 @@ def check_weather(location: str, month: str) -> dict:
             packing_recommendations=packing
         )
         out_dict = validated_resp.model_dump()
-        print(f"[OUTCOME] Successfully retrieved weather for '{inputs.location}' in {inputs.month}")
+        logger.info(f"[OUTCOME] Successfully retrieved weather for '{inputs.location}' in {inputs.month}")
         return out_dict
     except ValidationError as e:
-        print(f"[OUTCOME] Error: Output serialization failed: {e.errors()}")
+        logger.error(f"[OUTCOME] Error: Output serialization failed: {e.errors()}")
         return {"status": "error", "message": "Output schema validation failed."}
 
 
@@ -342,14 +347,14 @@ def format_itinerary(itinerary_data: dict) -> dict:
         A dictionary with the formatted markdown string.
     """
     # 📝 Intent Logging
-    print(f"[INTENT] Tool 'format_itinerary' triggered to format itinerary.")
+    logger.info(f"[INTENT] Tool 'format_itinerary' triggered to format itinerary.")
 
     try:
         # Explicit Pydantic validation
         inputs = ItineraryDataInput(**itinerary_data)
     except ValidationError as e:
         err_msg = f"Argument validation failed for format_itinerary: {e.errors()}"
-        print(f"[OUTCOME] Tool failed. {err_msg}")
+        logger.error(f"[OUTCOME] Tool failed. {err_msg}")
         return {
             "status": "error",
             "message": "Itinerary data validation failed. You must provide a valid structured itinerary matching the schema.",
@@ -381,7 +386,7 @@ def format_itinerary(itinerary_data: dict) -> dict:
         md_lines.append("")  # Empty line separator
 
     formatted_md = "\n".join(md_lines)
-    print(f"[OUTCOME] Successfully compiled markdown itinerary for {destination} ({duration})")
+    logger.info(f"[OUTCOME] Successfully compiled markdown itinerary for {destination} ({duration})")
     return {
         "status": "success",
         "markdown_itinerary": formatted_md
@@ -399,19 +404,19 @@ def request_human_confirmation(action: str, reason: str) -> dict:
         A dictionary containing the confirmation pending status.
     """
     # 📝 Intent Logging
-    print(f"[INTENT] Tool 'request_human_confirmation' triggered for action='{action}' (Reason: {reason})")
+    logger.info(f"[INTENT] Tool 'request_human_confirmation' triggered for action='{action}' (Reason: {reason})")
 
     try:
         inputs = ConfirmationRequest(action=action, reason=reason)
     except ValidationError as e:
-        print(f"[OUTCOME] Tool failed. Validation error: {e.errors()}")
+        logger.error(f"[OUTCOME] Tool failed. Validation error: {e.errors()}")
         return {
             "status": "error",
             "message": "Validation failed.",
             "errors": e.errors()
         }
 
-    print(f"[OUTCOME] Human confirmation requested and pending for action='{inputs.action}'. Execution paused.")
+    logger.info(f"[OUTCOME] Human confirmation requested and pending for action='{inputs.action}'. Execution paused.")
     return {
         "status": "pending_confirmation",
         "action": inputs.action,

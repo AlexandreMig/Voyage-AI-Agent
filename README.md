@@ -33,14 +33,14 @@ graph TD
         FA -->|Invokes| FT[format_itinerary tool]
     end
     
-    AR -->|Managed Identity| GE[Gemini 2.5 Flash Endpoint]
+    AR -->|Managed Identity (Root: Pro, Specialists: Flash)| GE[Vertex Gemini Endpoint]
     GE -->|Final Response| A2UI
 ```
 
-1. **Root Coordinator Agent (`VoyageAI`)**: Governs the user session, parses intent, monitors constraints, checks user profile memory banks, and orchestrates specialized specialists.
-2. **Weather Specialist Agent (`weather_agent`)**: Dedicated solely to retrieving high-accuracy monthly weather forecasts and packing recommendations.
-3. **Attractions Specialist Agent (`search_agent`)**: Dedicated to querying localized databases, matching user travel pace, and checking dietary profile alignments (such as vegan/gluten-free).
-4. **Layout Formatting Specialist Agent (`formatter_agent`)**: Compiles raw structural schedules into beautiful, premium Markdown travel timelines.
+1. **Root Coordinator Agent (`VoyageAI`) [Strategic Routing: `gemini-2.5-pro`]**: Governs the user session, parses intent, monitors constraints, checks user profile memory banks, and orchestrates specialized specialists. Uses the highest-reasoning tier for planning and safety.
+2. **Weather Specialist Agent (`weather_agent`) [Strategic Routing: `gemini-2.5-flash`]**: Dedicated solely to retrieving high-accuracy monthly weather forecasts and packing recommendations. Uses the fast utility model to optimize cost and latency.
+3. **Attractions Specialist Agent (`search_agent`) [Strategic Routing: `gemini-2.5-flash`]**: Dedicated to querying localized databases, matching user travel pace, and checking dietary profile alignments (such as vegan/gluten-free).
+4. **Layout Formatting Specialist Agent (`formatter_agent`) [Strategic Routing: `gemini-2.5-flash`]**: Compiles raw structural schedules into beautiful, premium Markdown travel timelines.
 
 ---
 
@@ -131,7 +131,8 @@ VoyageAI serves a stunning, high-fidelity Web Dashboard (A2UI) directly from its
 
 Instead of using third-party orchestration pipelines, VoyageAI is fully integrated with **Google Cloud Build**, utilizing identity federation and secure server-side container orchestration:
 
-### Scaffolded Pipelines
+### Scaffolded Pipelines & Infrastructure
+*   [`terraform/`](file:///Users/alexlopes/.gemini/antigravity/scratch/voyageai/terraform/): Root-level directory containing declarative **Terraform Infrastructure as Code** modules mapping IAM permissions, bigquery datasets, cloud storage logging sinks, API enablements, and Vertex AI resources.
 *   [`.cloudbuild/deploy-to-prod.yaml`](file:///Users/alexlopes/.gemini/antigravity/scratch/voyageai/.cloudbuild/deploy-to-prod.yaml): Syncs uv environments, builds container images, and deploys directly to us-east1 Vertex AI Agent Runtime.
 *   [`.cloudbuild/staging.yaml`](file:///Users/alexlopes/.gemini/antigravity/scratch/voyageai/.cloudbuild/staging.yaml): Deploys a staging instance, runs an automated Locust headless load-test suite, exports results to a Google Cloud Storage bucket, and promotes to production.
 *   [`.cloudbuild/pr_checks.yaml`](file:///Users/alexlopes/.gemini/antigravity/scratch/voyageai/.cloudbuild/pr_checks.yaml): Runs linting, syntax audits, and basic validations on pull requests.
@@ -178,4 +179,5 @@ google-agents-cli eval grade
 ## 🔒 Security & Telemetry
 
 1.  **OTEL Spans**: Deployed with OpenTelemetry environment variables (`OTEL_SEMCONV_STABILITY_OPT_IN=http` and `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true`) forwarding full conversational traces to Google Cloud Trace.
-2.  **Cryptographic Identity**: Enforces standard SPIFFE cryptography container bounds using `--agent-identity`, eliminating static IAM credentials or keyfile mounts.
+2.  **Structured Internal Logging**: Upgraded all internal tool executions and runtime callback logs to utilize Python's standard `logging` module (`logger.info`, `logger.error`), yielding formal timestamped outputs and facilitating structured JSON search schemas.
+3.  **Cryptographic Identity**: Enforces standard SPIFFE cryptography container bounds using `--agent-identity`, eliminating static IAM credentials or keyfile mounts.
