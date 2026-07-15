@@ -33,7 +33,7 @@ if not project_id or project_id == "outside-of-project":
     project_id = "fde-ai-learning-project"
 
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get("GOOGLE_CLOUD_LOCATION") or "us-east1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 from app.tools import search_attractions, check_weather, format_itinerary
@@ -78,7 +78,7 @@ async def after_agent_callback(callback_context: CallbackContext):
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
-        model="gemini-flash-latest",
+        model="gemini-1.5-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=TRAVEL_CONCIERGE_INSTRUCTION,
