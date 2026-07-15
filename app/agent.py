@@ -78,7 +78,7 @@ async def after_agent_callback(callback_context: CallbackContext):
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
-        model="gemini-1.5-flash",
+        model="gemini-2.5-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=TRAVEL_CONCIERGE_INSTRUCTION,
