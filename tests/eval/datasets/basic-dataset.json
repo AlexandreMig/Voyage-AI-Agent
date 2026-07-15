@@ -1,17 +1,24 @@
 {
   "eval_cases": [
     {
-      "eval_case_id": "greeting",
+      "eval_case_id": "weather_packing_query",
       "prompt": {
         "role": "user",
-        "parts": [{"text": "Hello, what can you help me with?"}]
+        "parts": [{"text": "I want to visit Tokyo in August. What is the weather like there, and what are some packing recommendations?"}]
       }
     },
     {
-      "eval_case_id": "weather_query",
+      "eval_case_id": "relaxed_itinerary_query",
       "prompt": {
         "role": "user",
-        "parts": [{"text": "What's the weather like in San Francisco?"}]
+        "parts": [{"text": "Please prepare a relaxed 3-day itinerary for a trip to Tokyo. I'd love to visit Meiji Jingu and Shinjuku Gyoen."}]
+      }
+    },
+    {
+      "eval_case_id": "vegan_dining_query",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "I am traveling to Tokyo and need dinner recommendations. Note that my diet is strictly vegan."}]
       }
     }
   ]

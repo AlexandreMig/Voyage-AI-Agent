@@ -3,5 +3,5 @@
 - `[x]` Define Task Checklist (`task.md`)
 - `[x]` Create Custom Travel Planning Tools (`app/tools.py`)
 - `[x]` Implement Root Agent & Callbacks (`app/agent.py`)
-- `[ ]` Design Eval Dataset & Config (`tests/eval/`)
+- `[x]` Design Eval Dataset & Config (`tests/eval/`)
 - `[ ]` Execute Local Evals & Verify (`walkthrough.md`)
