@@ -7,7 +7,7 @@ generated_at: '2026-07-15T14:35:36.715379+00:00'
 language: python
 create_params:
   deployment_target: agent_runtime
-  cicd_runner: skip
+  cicd_runner: github_actions
   include_data_ingestion: false
   is_a2a: true
   datastore: none
