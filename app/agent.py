@@ -69,7 +69,11 @@ async def before_agent_callback(callback_context: CallbackContext) -> None:
 
 async def after_agent_callback(callback_context: CallbackContext):
     """Triggers Memory Bank processing to compile raw user interactions into long-term profile memories."""
-    await callback_context.add_session_to_memory()
+    try:
+        await callback_context.add_session_to_memory()
+    except ValueError:
+        # Handle cases where memory service is not available (e.g., during local eval generate)
+        pass
     return None
 
 root_agent = Agent(
