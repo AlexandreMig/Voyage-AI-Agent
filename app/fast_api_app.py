@@ -20,6 +20,7 @@ import google.auth
 from a2a.server.tasks import InMemoryTaskStore
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from google.adk.cli.fast_api import get_fast_api_app
 from google.adk.runners import Runner
 from google.cloud import logging as google_cloud_logging
@@ -92,6 +93,9 @@ app.description = "API for interacting with the Agent voyageai"
 # Proxy routes so the Vertex AI Console Playground (reasoning_engine SDK) can
 # talk to this agent alongside the native adk_api routes.
 attach_reasoning_engine_routes(app)
+
+# Mount static files for the premium web dashboard (A2UI)
+app.mount("/dashboard", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 @app.post("/feedback")

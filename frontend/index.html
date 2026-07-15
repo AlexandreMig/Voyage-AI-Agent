@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoyageAI Dashboard | Premium Travel Concierge (A2UI)</title>
+    <!-- Modern Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for premium micro-visuals -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styled CSS stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Glow Background Effects -->
+    <div class="glow-bg-primary"></div>
+    <div class="glow-bg-secondary"></div>
+
+    <div class="app-container">
+        <!-- 🗺️ Main Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon-wrapper">
+                    <i class="fa-solid fa-compass logo-icon"></i>
+                </div>
+                <div class="logo-text-wrapper">
+                    <h1 class="logo-title">Voyage<span>AI</span></h1>
+                    <span class="logo-subtitle">Enterprise Travel Concierge</span>
+                </div>
+            </div>
+            
+            <!-- Interactive Mode Switcher -->
+            <div class="mode-control-wrapper">
+                <span class="mode-label">Execution Mode:</span>
+                <div class="mode-toggle-group">
+                    <button id="btn-mode-mock" class="mode-btn active" title="Instant high-fidelity simulated response demo">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Mock Demo
+                    </button>
+                    <button id="btn-mode-live" class="mode-btn" title="Live programmatic connection to the Vertex AI Reasoning Engine">
+                        <i class="fa-solid fa-cloud-bolt"></i> Live Engine
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 🏢 Main Layout Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- 🛠️ Left Panel: Travel Parameter Planner -->
+            <section class="panel planner-panel animate-fade-in">
+                <div class="panel-header">
+                    <i class="fa-solid fa-sliders panel-icon"></i>
+                    <h2>Configure Your Voyage</h2>
+                </div>
+                <div class="panel-body">
+                    <form id="travel-planner-form">
+                        <!-- Destination Input -->
+                        <div class="form-group">
+                            <label for="input-destination">Destination</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-location-dot input-icon"></i>
+                                <select id="input-destination" required>
+                                    <option value="Tokyo" selected>Tokyo, Japan</option>
+                                    <option value="Paris">Paris, France</option>
+                                    <option value="New York">New York, USA</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Travel Month -->
+                        <div class="form-group">
+                            <label for="input-month">Travel Month</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-calendar-days input-icon"></i>
+                                <select id="input-month">
+                                    <option value="January">January</option>
+                                    <option value="May">May</option>
+                                    <option value="October" selected>October</option>
+                                    <option value="December">December</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Duration Slider -->
+                        <div class="form-group">
+                            <div class="label-header">
+                                <label for="input-duration">Duration</label>
+                                <span id="duration-display" class="badge">1 Day</span>
+                            </div>
+                            <input type="range" id="input-duration" min="1" max="7" value="1" class="slider-input">
+                        </div>
+
+                        <!-- Pace Switcher -->
+                        <div class="form-group">
+                            <label>Travel Pace</label>
+                            <div class="segmented-switch">
+                                <label class="segment-option">
+                                    <input type="radio" name="input-pace" value="relaxed" checked>
+                                    <span class="segment-btn">
+                                        <i class="fa-solid fa-couch"></i> Relaxed
+                                    </span>
+                                </label>
+                                <label class="segment-option">
+                                    <input type="radio" name="input-pace" value="active">
+                                    <span class="segment-btn">
+                                        <i class="fa-solid fa-shoe-prints"></i> Active
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Dietary Restrictions -->
+                        <div class="form-group">
+                            <label>Dietary Restrictions</label>
+                            <div class="checkbox-tag-grid">
+                                <label class="tag-checkbox-label">
+                                    <input type="checkbox" name="input-diet" value="vegan" checked>
+                                    <span class="tag-checkbox-btn">
+                                        <i class="fa-solid fa-leaf"></i> Vegan
+                                    </span>
+                                </label>
+                                <label class="tag-checkbox-label">
+                                    <input type="checkbox" name="input-diet" value="gluten-free">
+                                    <span class="tag-checkbox-btn">
+                                        <i class="fa-solid fa-wheat-awn-circle-exclamation"></i> Gluten-Free
+                                    </span>
+                                </label>
+                                <label class="tag-checkbox-label">
+                                    <input type="checkbox" name="input-diet" value="halal">
+                                    <span class="tag-checkbox-btn">
+                                        <i class="fa-solid fa-circle-check"></i> Halal
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button type="submit" id="btn-generate" class="primary-btn">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Build Custom Itinerary
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 💬 Center Panel: Interactive Chat & Schedule Renderer -->
+            <section class="panel chat-panel animate-fade-in-delayed">
+                <div class="chat-header">
+                    <div class="chat-agent-info">
+                        <div class="agent-avatar">
+                            <i class="fa-solid fa-robot"></i>
+                            <div class="status-indicator-dot online"></div>
+                        </div>
+                        <div class="agent-name-wrapper">
+                            <h3>VoyageAI Assistant</h3>
+                            <span class="agent-status" id="agent-status-text">Ready to design itineraries</span>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button id="btn-clear-chat" class="icon-btn" title="Clear Chat Console">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Chat Feed -->
+                <div class="chat-feed-viewport" id="chat-feed">
+                    <!-- Default Greeting -->
+                    <div class="chat-message assistant">
+                        <div class="message-avatar">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="message-bubble-wrapper">
+                            <div class="message-bubble">
+                                <p>Welcome! I am **VoyageAI**, your secure, hyper-personalized Travel Concierge. I specialize in crafting beautifully optimized travel schedules backed by live local attractions, weather, and physical pace constraints.</p>
+                                <p>Adjust your preferences on the left planner panel and click **Build Custom Itinerary**, or type a custom request directly below!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Text Console -->
+                <div class="chat-console-wrapper">
+                    <form id="chat-input-form" class="chat-form">
+                        <input type="text" id="input-custom-query" placeholder="Ask anything... e.g. 'Add a vegan dessert spot in Harajuku to my schedule!'" autocomplete="off">
+                        <button type="submit" id="btn-send-message" class="send-btn" title="Send query to VoyageAI">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 🌤️ Right Panel: Attractions & Weather Widgets -->
+            <section class="panel widgets-panel animate-fade-in-delayed-more">
+                <div class="panel-header">
+                    <i class="fa-solid fa-briefcase panel-icon"></i>
+                    <h2>Local Destination Guide</h2>
+                </div>
+                <div class="panel-body widgets-container">
+                    
+                    <!-- Weather Glass Widget -->
+                    <div class="widget-card weather-widget frosted-glass" id="widget-weather-card">
+                        <div class="widget-loading-placeholder">
+                            <i class="fa-solid fa-cloud-sun fa-spin icon-spin-slow"></i>
+                            <p>Select a destination to load local climate averages...</p>
+                        </div>
+                        <!-- Populated Weather Content -->
+                        <div class="widget-active-content hidden" id="weather-active-content">
+                            <div class="weather-main-row">
+                                <div class="weather-temp-block">
+                                    <span id="weather-temp" class="weather-temp-num">12°C</span>
+                                    <span id="weather-temp-f" class="weather-temp-f-num">54°F</span>
+                                </div>
+                                <div class="weather-icon-block">
+                                    <i id="weather-sky-icon" class="fa-solid fa-cloud-sun"></i>
+                                </div>
+                            </div>
+                            <h4 id="weather-destination-name" class="weather-dest">Tokyo | October</h4>
+                            <p id="weather-desc" class="weather-summary">Cool, crisp, and sunny with beautiful autumn breezes.</p>
+                            <div class="weather-packing-box">
+                                <h5><i class="fa-solid fa-shirt"></i> Recommended Packing</h5>
+                                <p id="weather-packing">Medium layered jackets, a light sweater, comfortable walking sneakers, and a light scarf.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attractions Guide Widget -->
+                    <div class="attractions-widget-wrapper">
+                        <div class="widget-section-header">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <h3>Top Local Spotlights</h3>
+                        </div>
+                        
+                        <div class="attractions-feed-grid" id="attractions-feed">
+                            <div class="widget-loading-placeholder py-4">
+                                <i class="fa-solid fa-map-pin fa-bounce icon-bounce-slow"></i>
+                                <p>Averages and highlights will synchronize with your generated travel plan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Active JavaScript Client Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
