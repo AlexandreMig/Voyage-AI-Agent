@@ -18,10 +18,10 @@ VoyageAI departs from monolithic design patterns in favor of a clean, high-perfo
 
 ```mermaid
 graph TD
-    User([User Web Browser]) -->|Loads HTTP/HTTPS| FD[FastAPI Web Server /dashboard]
+    User([User Web Browser]) -->|Loads HTTP/HTTPS| FD["FastAPI Web Server /dashboard"]
     User -->|Interacts with UI| A2UI[VoyageAI A2UI Client]
     A2UI -->|Mock Mode| MD[Preloaded Luxury Itineraries]
-    A2UI -->|Live Mode| RE[/api/reasoning_engine API]
+    A2UI -->|Live Mode| RE["/api/reasoning_engine API"]
     RE -->|Reasoning Engine| AR[Vertex AI Agent Runtime - us-east1]
     
     subgraph AR [Vertex AI Agent Runtime]
